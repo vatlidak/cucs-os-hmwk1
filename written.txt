@@ -1,0 +1,80 @@
+1. Exercise 1.8
+--
+
+
+2. Exercise 1.13
+--
+
+3. Exercise 3.1
+--
+UNIX fork can return an error.
+Fork is a system call with which a program requests from the Operating System
+(OS) to create a new process by duplicating (creating a child of) the calling
+process. Being a request to the OS, there is no guarantee that fork will
+be successfully fulfilled, and thus there should be a mechanism indicating the
+status of this request. This mechanism should be the return value of the fork
+system call indicating whether an error occurred or not.
+
+Additionally, from the manual page of fork(2): "On failure, -1 is returned  in
+the parent, no  child process is created, and errno is set appropriately"
+
+
+4. Exercise 3.2
+--
+UNIX exec can return an error.
+exec is a system call with which a program requests from the OS to overlay the
+image of the calling process with the image of a new process (another program).
+Being a request to the OS, there is no guarantee that exec will be successful,
+and thus there should be a mechanism indicating whether exec succeeded or
+failed. This mechanism should be the return value of the fork system call
+indicating whether an error occurred or not.
+
+Additionally, from the manual page of exec(2): "The exec() functions only
+return if an error has have occurred. The return value is -1, and errno is
+set to indicate the error."
+
+
+5. Exercise 3.3
+--
+
+
+6. Exercise 3.4
+--
+
+7. Exercise 3.7
+--
+When a user executes "exec ls" the image of the calling process (which is the
+shell in which the user typed the command) is overlaid with the image of the
+process corresponding to the  binary of "ls" command.  As a result the user
+will see his terminal disappearing because the process in which the current
+terminal lives is substituted with a process which will execute "ls" binary.
+
+
+8. Exercise 3.8
+--
+There are 32 processed created if the program is run.
+The initial process invokes a recursive function "forkthem" which  checks the
+value of a variable n which if greater than zero, (1) a new child process will
+be forked and (2) "forkthem" will recursively invoke itself. Note that for
+n == 0 there is one process, and for n == 1 there are two processes. Also, note
+that the number of processes for n equals the sum  of the number of processes
+for (n-1) and (n-2). This a Fibonacci sequence starting for which we drop the
+first and the second term, and since we execute forkthem(n=5), we need to
+calculate the sum: 1+2+3+5+8+13.
+Thus, there are 32 processes created.
+
+
+9. Exercise 3.9
+--
+The initial process will fork two children and the children processes will
+not fork. There will be 3 copies of x's value in 3 distinct processes.
+At the parent, upon completion, x will equal to 20.
+At the first child, upon completion, x will equal to 10.
+At the second child, upon completion, x will equal to 15.
+
+
+10. Exercise 3.10
+--
+Program 1 will print twice the value 6 (once the parent and once the child).
+Program 2 will print once the value 6 ( the child prints nothing, since it
+executes the else statement and exits immediately).
