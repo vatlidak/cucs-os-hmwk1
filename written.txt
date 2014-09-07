@@ -1,9 +1,36 @@
 1. Exercise 1.8
 --
+In order to design a system to run an entire Operating System (OS) as an
+application on top of another OS we need to carefully consider virtualization.
+Ideally, we should build a system whose base OS is capable of acting as a
+Virtual Machine Monitor (VMM), also known as Hypervisor (HV), and can run
+another OS as if it were an application program. The base OS is called host OS
+and it provides the guest OS, running as an application program, with the
+illusion that it has full control of the physical hardware.
 
 
 2. Exercise 1.13
 --
+I am currently using a portable workstation and in my opinion OS designer
+should prioritize as follows:
+(1) Reliability is the most important requirement that my OS should meet, since
+I expect it to do exactly and only what I ask it to.
+(2) Security is also very important, since I need to be sure that my system,
+and thus my personal data, are safe from external attackers. In our days, where
+users are constantly connected to the Internet, security is arguably of
+principal importance.
+(3) Performance is slightly less important than Reliability and Security, but
+still it remains of essential concern and is clearly a requirement expected to
+be fulfilled.
+(4) Portability is less important than the previous three requirement because
+we are examining one specific system (a PC) whose hardware is not expected to
+change regularly through time. However, clearly, portability is a desired
+characteristic.
+(5) Adoption is desired characteristic for my system, but can be tolerated if
+not met. I am using a Personal Computer and in most cases I am the single one
+user logged into it. This diminishes the importance of adoption in comparison
+with the previous requirements.
+
 
 3. Exercise 3.1
 --
