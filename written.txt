@@ -6,7 +6,9 @@ Ideally, we should build a system whose base OS is capable of acting as a
 Virtual Machine Monitor (VMM), also known as Hypervisor (HV), and can run
 another OS as if it were an application program. The base OS is called host OS
 and it provides the guest OS, running as an application program, with the
-illusion that it has full control of the physical hardware.
+illusion that it has full control of the physical hardware. Good candidates
+for our design would be GNU/Linux OS with VirtualBox installed or KVM
+Hypervisor in a RHEL Linux distribution.
 
 
 2. Exercise 1.13
@@ -38,12 +40,9 @@ UNIX fork can return an error.
 Fork is a system call with which a program requests from the Operating System
 (OS) to create a new process by duplicating (creating a child of) the calling
 process. Being a request to the OS, there is no guarantee that fork will
-be successfully fulfilled, and thus there should be a mechanism indicating the
-status of this request. This mechanism should be the return value of the fork
-system call indicating whether an error occurred or not.
-
-Additionally, from the manual page of fork(2): "On failure, -1 is returned  in
-the parent, no  child process is created, and errno is set appropriately"
+be successfully executed, meaning that an error may occur. If I was to design
+fork system call, I would need to allow it to return a value indicating whether
+an error occurred or not.
 
 
 4. Exercise 3.2
@@ -51,21 +50,17 @@ the parent, no  child process is created, and errno is set appropriately"
 UNIX exec can return an error.
 exec is a system call with which a program requests from the OS to overlay the
 image of the calling process with the image of a new process (another program).
-Being a request to the OS, there is no guarantee that exec will be successful,
-and thus there should be a mechanism indicating whether exec succeeded or
-failed. This mechanism should be the return value of the fork system call
-indicating whether an error occurred or not.
-
-Additionally, from the manual page of exec(2): "The exec() functions only
-return if an error has have occurred. The return value is -1, and errno is
-set to indicate the error."
+Being a request to the OS, there is no guarantee that exec will be successfully
+executed, meaning that an error may occur. If I was to design exec system call,
+I would need to allow it to return a value indicating whether an error occurred
+or not.
 
 
 5. Exercise 3.3
 --
 If we run the suggested program in a UNIX system it will be hanging and will
 be unusable due to a very high number of forked processes. Unless there is
-ulimit set restricting the max number of active processes per user, the OS
+"ulimit" set restricting the max number of active processes per user, the OS
 will be continuously requested to fork new processes and will appear non
 responsive to all end users. Practically, what will happen is that the initial
 parent process will be forking children until fork system call fails (return
