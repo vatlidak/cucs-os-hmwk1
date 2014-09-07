@@ -36,10 +36,27 @@ set to indicate the error."
 
 5. Exercise 3.3
 --
+If we run the suggested program in a UNIX system it will be hanging and will
+be unusable due to a very high number of forked processes. Unless there is
+ulimit set restricting the max number of active processes per user, the OS
+will be continuously requested to fork new processes and will appear non
+responsive to all end users. Practically, what will happen is that the initial
+parent process will be forking children until fork system call fails (return
+-1). Also, any forked child will become a parent trying to fork other children,
+which will in turn also be trying to fork until fork fails. Note that the
+condition in while-loop is greater or equal to zero, meaning that children will
+also be executing the while-loop. Consequently, the system will end up having
+an extremely high number of forked processes requesting to fork again and again
+making the system unusable.
 
 
 6. Exercise 3.4
 --
+In order wait to return successfully and immediately the parent process should
+wait for a child of his that has already terminated. That is, the parent should
+invoke wait system call passing as argument the PID of a forked --by him--
+child which has already terminated execution.
+
 
 7. Exercise 3.7
 --
@@ -52,7 +69,7 @@ terminal lives is substituted with a process which will execute "ls" binary.
 
 8. Exercise 3.8
 --
-There are 32 processed created if the program is run.
+There are 32 processed created if the suggested program is run.
 The initial process invokes a recursive function "forkthem" which  checks the
 value of a variable n which if greater than zero, (1) a new child process will
 be forked and (2) "forkthem" will recursively invoke itself. Note that for
@@ -66,8 +83,8 @@ Thus, there are 32 processes created.
 
 9. Exercise 3.9
 --
-The initial process will fork two children and the children processes will
-not fork. There will be 3 copies of x's value in 3 distinct processes.
+There will be 3 copies of x's value in 3 distinct processes, since the initial
+process will fork two children and these children processes will not fork.
 At the parent, upon completion, x will equal to 20.
 At the first child, upon completion, x will equal to 10.
 At the second child, upon completion, x will equal to 15.
@@ -78,3 +95,11 @@ At the second child, upon completion, x will equal to 15.
 Program 1 will print twice the value 6 (once the parent and once the child).
 Program 2 will print once the value 6 ( the child prints nothing, since it
 executes the else statement and exits immediately).
+
+
+REFERENCES
+--
+1. Operating Systems: Principles and Practice (2nd Edition), Thomas Anderson
+and Michael Dahlin, Recursive Books, West Lake Hills, TX, 2014
+
+2. Linux  Programmer's Manual
