@@ -9,6 +9,8 @@
 #include <ctype.h>
 #include "path_utils.h"
 
+struct pnode *PATH;
+
 /*
  * @tokenize - Parse line into tokens
  *
@@ -100,6 +102,26 @@ void cd(char **args)
 	}
 }
 
+/*
+ * @path - Implement built-in "path"
+ *
+ * @args - argv[0] is the command's name; arguments follow subsequently.
+ */
+void path(char **args)
+{
+	if (args[1] == NULL) {
+		print(PATH);
+	} else if (args[1][0] == '+' && args[3] == NULL) {
+		if (insert_at_start(&PATH, args[2]) < 0)
+			printf("error: cannot add path\n");
+	} else if (args[1][0] == '-' && args[3] == NULL) {
+		if (delete(&PATH, args[2]) < 0)
+			printf("error: cannot remove path\n");
+	} else {
+		printf("error: syntrax error in path command\n");
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int status;
@@ -109,6 +131,7 @@ int main(int argc, char **argv)
 	char **tokens;
 	size_t n = 12345;
 
+	PATH = NULL;
 	while (1) {
 		printf("$");
 		line = NULL;
@@ -135,6 +158,18 @@ int main(int argc, char **argv)
 			free(tokens);
 			continue;
 		}
+		if (strcmp(tokens[0], "path") == 0) {
+			path(tokens);
+			free(line);
+			free(tokens);
+			continue;
+		}
+		/* bin is not an absolute path; check PATH variable */
+		if (isalpha(tokens[0][0]))
+			if (in_path(PATH, tokens[0]) < 0) {
+				printf("error: executabe not in PATH\n");
+				continue;
+			}
 		/* Do work */
 		pid = fork();
 		if (pid > 0) {
