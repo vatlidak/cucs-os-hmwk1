@@ -3,7 +3,7 @@ CFLAGS := -Wall -Werror
 LDFLAGS :=
 
 
-OBJECTS := shell.o
+OBJECTS := shell.o path_utils.o
 
 all: w4118_sh
 
@@ -11,8 +11,11 @@ all: w4118_sh
 w4118_sh: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS)
 
-%.o: %.c
+%.o: src/%.c
 	$(CC) $(CFLAGS) -c $^
+
+check:
+	scripts/checkpatch.pl --no-tree -f src/*
 
 clean:
 	rm -f w4118_sh
