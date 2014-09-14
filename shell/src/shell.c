@@ -9,7 +9,6 @@
 #include <ctype.h>
 #include "path_utils.h"
 
-
 /*
  * @tokenize - Parse line into tokens
  *
@@ -71,6 +70,36 @@ int execute(char **args)
 	return NOT_OK;
 }
 
+/*
+ * @cd - Implement built-in "cd"
+ *
+ * @args - argv[0] is the command's name; arguments follow subsequently.
+ */
+void cd(char **args)
+{
+	char *path;
+
+	/*
+	 * When a user tries to change directory  without specifying
+	 * any, by default GNU/Linux uses user's home directory.
+	 */
+	if (args[1] == '\0') {
+		path = calloc(strlen(getlogin()) + strlen("/home/") + 1,
+			      sizeof(char));
+		if (path == NULL) {
+			printf("error: %s", strerror(errno));
+			printf("\n");
+		}
+		sprintf(path, "/home/%s", getlogin());
+	} else {
+		path = args[1];
+	}
+	if (chdir(path) < 0) {
+		printf("error: %s", strerror(errno));
+		printf("\n");
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int status;
@@ -99,6 +128,12 @@ int main(int argc, char **argv)
 			free(line);
 			free(tokens);
 			break;
+		}
+		if (strcmp(tokens[0], "cd") == 0) {
+			cd(tokens);
+			free(line);
+			free(tokens);
+			continue;
 		}
 		/* Do work */
 		pid = fork();
