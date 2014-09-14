@@ -27,12 +27,12 @@ int insert_at_start(struct pnode **list, char *dir)
 
 	temp = calloc(1, sizeof(struct pnode));
 	if (temp == NULL) {
-		printf("error: %s", strerror(errno));
+		fprintf(stderr, "error: %s", strerror(errno));
 		return NOT_OK;
 	}
 	temp->dir = calloc(strlen(dir) + 1, sizeof(char));
 	if (temp->dir == NULL) {
-		printf("error: %s", strerror(errno));
+		fprintf(stderr, "error: %s", strerror(errno));
 		return NOT_OK;
 	}
 	strcpy(temp->dir, dir);
@@ -64,7 +64,7 @@ int delete(struct pnode **list, char *dir)
 }
 
 /*
- * @in_path - Check if binary is in any foldere of PATH variable
+ * @in_path - Check if binary is in any folder of PATH variable
  *
  * @list - The list containing folders of PATH variable
  * @bin - The binary name
@@ -78,7 +78,7 @@ int in_path(struct pnode *list, char *bin)
 		fullpath = calloc(strlen(list->dir) + strlen(bin) + 2,
 				  sizeof(char));
 		if (fullpath == NULL) {
-			printf("error: %s", strerror(errno));
+			fprintf(stderr, "error: %s", strerror(errno));
 			return NOT_OK;
 		}
 		sprintf(fullpath, "%s/%s", list->dir, bin);

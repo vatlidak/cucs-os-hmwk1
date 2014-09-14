@@ -41,20 +41,18 @@ int tokenize(char *line, char ***tokens)
 	 */
 	copy = calloc(strlen(line), sizeof(char));
 	if (copy == NULL) {
-		printf("error: %s", strerror(errno));
+		fprintf(stderr, "error: %s", strerror(errno));
 		return NOT_OK;
 	}
 	strcpy(copy, line);
 	strtok(copy, delim);
 	ntok = 1;
-	/*TO DO: check what happens for 1? */
 	while (strtok(NULL, delim) != NULL)
 		ntok++;
 	free(copy);
-
 	*tokens = calloc(ntok + 1, sizeof(char *));
 	if (*tokens == NULL) {
-		printf("error: %s", strerror(errno));
+		fprintf(stderr, "error: %s", strerror(errno));
 		return NOT_OK;
 	}
 	**tokens = strtok(line, delim);
@@ -73,7 +71,7 @@ int tokenize(char *line, char ***tokens)
 int execute(char **args)
 {
 	execvp(args[0], args);
-	printf("error: %s", strerror(errno));
+	fprintf(stderr, "error: %s", strerror(errno));
 	return NOT_OK;
 }
 
@@ -94,7 +92,7 @@ void cd(char **args)
 		path = calloc(strlen(getlogin()) + strlen("/home/") + 1,
 			      sizeof(char));
 		if (path == NULL) {
-			printf("error: %s", strerror(errno));
+			fprintf(stderr, "error: %s", strerror(errno));
 			printf("\n");
 		}
 		sprintf(path, "/home/%s", getlogin());
@@ -102,7 +100,7 @@ void cd(char **args)
 		path = args[1];
 	}
 	if (chdir(path) < 0) {
-		printf("error: %s", strerror(errno));
+		fprintf(stderr, "error: %s", strerror(errno));
 		printf("\n");
 	}
 }
@@ -118,12 +116,12 @@ void path(char **args)
 		print(PATH);
 	} else if (args[1][0] == '+' && args[3] == NULL) {
 		if (insert_at_start(&PATH, args[2]) < 0)
-			printf("error: cannot add path\n");
+			fprintf(stderr, "error: cannot add path\n");
 	} else if (args[1][0] == '-' && args[3] == NULL) {
 		if (delete(&PATH, args[2]) < 0)
-			printf("error: cannot remove path\n");
+			fprintf(stderr, "error: cannot remove path\n");
 	} else {
-		printf("error: syntrax error in path command\n");
+		fprintf(stderr, "error: syntrax error in path command\n");
 	}
 }
 
@@ -142,25 +140,25 @@ int main(int argc, char **argv)
 		line = NULL;
 		len = getline(&line, &n, stdin);
 		if (len < 0) {
-			printf("error: %s", strerror(errno));
+			fprintf(stderr, "error: %s", strerror(errno));
 			goto error;
 		}
 		if (len == 1)
 			continue;
 		if (tokenize(line, &tokens) < 0)
 			goto error;
-		if (strcmp(tokens[0], "exit") == 0) {
+		if (!strcmp(tokens[0], "exit")) {
 			free(line);
 			free(tokens);
 			break;
 		}
-		if (strcmp(tokens[0], "cd") == 0) {
+		if (!strcmp(tokens[0], "cd")) {
 			cd(tokens);
 			free(line);
 			free(tokens);
 			continue;
 		}
-		if (strcmp(tokens[0], "path") == 0) {
+		if (!strcmp(tokens[0], "path")) {
 			path(tokens);
 			free(line);
 			free(tokens);
@@ -169,7 +167,7 @@ int main(int argc, char **argv)
 		/* bin is not an absolute path; check PATH variable */
 		if (isalpha(tokens[0][0]))
 			if (in_path(PATH, tokens[0]) < 0) {
-				printf("error: executabe not in PATH\n");
+				fprintf(stderr, "error: executabe not in PATH\n");
 				continue;
 			}
 		pid = fork();
