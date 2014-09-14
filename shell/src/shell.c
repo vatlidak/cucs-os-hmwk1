@@ -1,3 +1,9 @@
+/*
+ * shell.c
+ * Copyright (C) 2014 Vaggelis Atlidakis <vatlidak@columbia.cs.edu>
+ *
+ * A simple bash-like shell
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -58,7 +64,6 @@ int tokenize(char *line, char ***tokens)
 	/* printf("ntok:%d\n", ntok); */
 	return OK;
 }
-
 
 /*
  * @execute - Execute a command
@@ -140,13 +145,10 @@ int main(int argc, char **argv)
 			printf("error: %s", strerror(errno));
 			goto error;
 		}
-		/* Do nothing for CR */
 		if (len == 1)
 			continue;
 		if (tokenize(line, &tokens) < 0)
 			goto error;
-
-		/* Terminate */
 		if (strcmp(tokens[0], "exit") == 0) {
 			free(line);
 			free(tokens);
@@ -170,7 +172,6 @@ int main(int argc, char **argv)
 				printf("error: executabe not in PATH\n");
 				continue;
 			}
-		/* Do work */
 		pid = fork();
 		if (pid > 0) {
 			/* TO DO error  here */

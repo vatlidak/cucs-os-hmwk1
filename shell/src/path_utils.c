@@ -1,3 +1,9 @@
+/*
+ * path_utils.c
+ * Copyright (C) 2014 Vaggelis Atlidakis <vatlidak@columbia.cs.edu>
+ *
+ * Helpers for manipulation of PATH variable
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>

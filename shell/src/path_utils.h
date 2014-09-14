@@ -1,3 +1,7 @@
+/*
+ * path_utils.h
+ * Copyright (C) 2014 Vaggelis Atlidakis <vatlidak@columbia.cs.edu>
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
