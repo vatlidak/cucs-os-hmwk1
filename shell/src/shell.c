@@ -23,7 +23,7 @@ struct pnode *PATH;
 /*
  * @r_wait - Custom wait function that restarts when suspended by signal
  *
- * @stat_loc - Similar to status
+ * @stat_loc - Similar to status of ordinary wait syscall
  *
  * Source code from: UNIX SYSTEMS Programming, K. A. Robbins, S. Robbins
  */

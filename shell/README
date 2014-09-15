@@ -28,6 +28,15 @@ Support for quotes in commands: Commands like grep "PATTERN" [FILE...]
 have support for quotes; e.g., grep "l" README will search character l,
 not "l".
 
+Pipeline is implemented using fork(2) and pipe(2). In specific each
+command is executed by a separate child and STDIN/STDOUT is duplicated
+using dup2 to the READ/WRITE end of a pipe respectively. For example, a
+line of the form: "a | b" will result in 3 children being forked and one pipe.
+In the same spirit, a line of the form "a | b | c" will result in 3 children
+being forked and 2 pipes. The pipes are dynamically created in the parent
+according to the occurences of the pipe symbol ("|"). Afterwards, the parent
+forks and the filedescriptors and inherited in the children.
+
 ## test Run
 $python ./test.py
 25 of 25 tests passed
