@@ -4,12 +4,10 @@ LDFLAGS :=
 
 
 OBJECTS := shell.o path_utils.o
+EXECUTABLE := w4118_sh
 
-all: w4118_sh
-
-
-w4118_sh: $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS)
+all: $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(EXECUTABLE) $(OBJECTS)
 
 %.o: src/%.c
 	$(CC) $(CFLAGS) -c $^
@@ -18,7 +16,6 @@ check:
 	scripts/checkpatch.pl --no-tree -f src/*
 
 clean:
-	rm -f w4118_sh
-	rm -f shell.o
-
+	rm -f $(EXECUTABLE)
+	rm -f $(OBJECTS)
 .PHONY: clean
