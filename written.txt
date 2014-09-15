@@ -94,13 +94,10 @@ terminal lives is substituted with a process which will execute "ls" binary.
 There are 32 processed created if the suggested program is run.
 The initial process invokes a recursive function "forkthem" which  checks the
 value of a variable n which if greater than zero, (1) a new child process will
-be forked and (2) "forkthem" will recursively invoke itself. Note that for
-n == 0 there is one process, and for n == 1 there are two processes. Also, note
-that the number of processes for n equals the sum  of the number of processes
-for (n-1) and (n-2). This a Fibonacci sequence starting for which we drop the
-first and the second term, and since we execute forkthem(n=5), we need to
-calculate the sum: 1+2+3+5+8+13.
-Thus, there are 32 processes created.
+be forked and (2) "forkthem" will recursively invoke itself.
+If n == 0 there is one process, if n == 1 there are two processes, if n == 2
+there are four processes, ..., and finally if n == 5  there are 32 processes
+created (including the parent).
 
 
 9. Exercise 3.9
