@@ -86,36 +86,106 @@ int tokenize(char *line, char ***args, char *delim)
 	for (i = 1; i < ntok; i++)
 		*(*args + i) = strtok(NULL, delim);
 	*(*args + i) = NULL;
-	/* printf("ntok:%d\n", ntok); */
 	return OK;
 }
 
 /*
- * @execute - Execute command(s) as specified in line
+ * @pipeline - Execute line which contains pipe commad(s)
  *
- * @line - A pointer to a string specifying command(s) to be executed
+ * @line - The line with the piped command(s)
  */
-int execute(char *line)
+int pipeline(char *line)
 {
-	char **args;// = NULL;
 	pid_t pid;
-	int status;
+	int i, j, npipes;
+	int **pipes;
+	char **args;
 
-	pid = fork();
-	if (pid > 0) {
-		pid = waitpid(pid, &status, 0);
-		return OK;
-	} else if (pid == 0) {
-		if (tokenize(line, &args, "\n\t \"") < 0)
-			goto error;
-		execvp(args[0], args);
-	} else {
+	npipes = 0;
+	for(i = 0; i < strlen(line); i++)
+		if (line[i] == '|')
+			++npipes;
+	pipes = calloc(npipes, sizeof(int));
+	if (pipes == NULL) {
+		fprintf(stderr, "error: %s\n", strerror(errno));
 		goto error;
 	}
+	for (i = 0; i < npipes; i++) {
+		pipes[i] = calloc(2, sizeof(int));
+		if (pipes[i] == NULL) {
+			fprintf(stderr, "error: %s\n", strerror(errno));
+			goto error;
+		}
+		if (pipe(pipes[i]) < 0) {
+			fprintf(stderr, "error: %s\n", strerror(errno));
+			goto error;
+		}
+	}
+#define READ 0
+#define WRITE 1
+	for (i = 0; i < npipes + 1; i++) {
+		pid = fork();
+		if (pid == 0)
+			break;
+		else if (pid > 0) {
+			continue;
+		}
+		else
+			goto error;
+	}
+	if (pid > 0) {
+		for(i = 0; i < npipes; i++) {
+			close(pipes[i][READ]);
+			close(pipes[i][WRITE]);
+		}
+		pid_t rval;
+		while ((rval = r_wait(NULL)) > 0);
+		//{
+		//	fprintf(stderr, "%ld\n", (long) rval);
+		//}
+		for (i = 0; i < npipes; i++)
+			free(pipes[i]);
+		free(pipes);
+	}
+	if (pid == 0) {
+		//fprintf(stderr, "chico: %ld\n", (long)getpid());
+		if (i != npipes) {
+			if (close(pipes[i][READ]) < 0)
+				goto error;
+			if (dup2(pipes[i][WRITE], 1) < 0)
+				goto error;
+		}
+		if(i != 0) {
+			if (close(pipes[i-1][WRITE]) < 0)
+				goto error;
+			if (dup2(pipes[i-1][READ], 0) < 0)
+				goto error;
+		}
+		for (j = 0; j < i; j++) {
+			close(pipes[j][READ]);
+			close(pipes[j][WRITE]);
+		}
+		char *beg = strtok(line, "|\n");
+
+		for (j = 0; j < i; j++)
+			beg = strtok(NULL, "|\n");
+		if (tokenize(beg, &args, "\n\t |\"") < 0) {
+			fprintf(stderr, "error: cannot parse cmd: <%s>\n", beg);
+			goto exit;
+		}
+
+		if (in_path(PATH, args[0]) < 0) {
+			free(args);
+			goto error;
+		}
+		execvp(args[0], args);
+		goto error;
+	}
+	return 0;
 error:
-	fprintf(stderr, "error: %s", strerror(errno));
-	fprintf(stderr, "execute\n");
-	return NOT_OK;
+	fprintf(stderr, "error: %s\n", strerror(errno));
+exit:
+	exit(-1);
 }
 
 /*
