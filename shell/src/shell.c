@@ -57,6 +57,8 @@ int tokenize(char *line, char ***args, char *delim)
 	 * initial buffer and use it to count number of args
 	 * and in the next iteration then retrieve the args.
 	 */
+	if (line == NULL)
+		return NOT_OK;
 	copy = calloc(strlen(line), sizeof(char));
 	if (copy == NULL) {
 		fprintf(stderr, "error: %s", strerror(errno));
