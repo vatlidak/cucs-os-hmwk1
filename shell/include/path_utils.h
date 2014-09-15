@@ -12,9 +12,6 @@
 #include <errno.h>
 #include <ctype.h>
 
-#define OK 0
-#define NOT_OK -1
-
 struct pnode {
 	char *dir;
 	struct pnode *next;

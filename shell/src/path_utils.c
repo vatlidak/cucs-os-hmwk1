@@ -14,6 +14,8 @@
 #include <errno.h>
 #include <ctype.h>
 #include "path_utils.h"
+#define OK 0
+#define NOT_OK -1
 
 /*
  * @insert_at_start - Add a directory in PATH variable

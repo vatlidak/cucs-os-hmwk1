@@ -15,6 +15,8 @@
 #include <ctype.h>
 #include <signal.h>
 #include "path_utils.h"
+#define OK 0
+#define NOT_OK -1
 
 struct pnode *PATH;
 
@@ -123,7 +125,7 @@ int tokenize(char *line, char ***args, char *delim)
 }
 
 /*
- * @pipeline - Execute line which contains pipe commad(s)
+ * @pipeline - Execute line which contains pipe symbol(s)
  *
  * @line - The line with the piped command(s)
  */
@@ -167,8 +169,9 @@ int pipeline(char *line)
 	}
 	if (pid > 0) {
 		for (i = 0; i < npipes; i++) {
-			close(pipes[i][READ]);
-			close(pipes[i][WRITE]);
+			if (close(pipes[i][READ]) < 0 ||
+			    close(pipes[i][WRITE]) < 0)
+				goto  error;
 		}
 		sigignore();
 		while (r_wait(NULL) > 0)
@@ -184,23 +187,28 @@ int pipeline(char *line)
 				goto error;
 			if (dup2(pipes[i][WRITE], 1) < 0)
 				goto error;
+			if (close(pipes[i][READ]) < 0)
+				goto error;
 		}
 		if (i != 0) {
 			if (close(pipes[i-1][WRITE]) < 0)
 				goto error;
 			if (dup2(pipes[i-1][READ], 0) < 0)
 				goto error;
+			if (close(pipes[i-1][READ]) < 0)
+				goto error;
 		}
 		for (j = 0; j < i; j++) {
-			close(pipes[j][READ]);
-			close(pipes[j][WRITE]);
+			if (close(pipes[j][READ]) < 0 ||
+			    close(pipes[j][WRITE]) < 0)
+				goto error;
 		}
 		char *beg = strtok(line, "|\n");
-
+		/* find which partition of the pipeline you should execute */
 		for (j = 0; j < i; j++)
 			beg = strtok(NULL, "|\n");
 		if (tokenize(beg, &args, "\n\t |\"") < 0) {
-			fprintf(stderr, "error: cannot parse cmd: <%s>\n", beg);
+			fprintf(stderr, "error: cannot parse cmd:<%s>\n", beg);
 			goto exit;
 		}
 		if (in_path(PATH, args[0]) < 0) {
@@ -288,6 +296,8 @@ shell:
 		}
 		if (len == 1)
 			goto shell;
+		if (strchr(line, '|') != NULL)
+			goto pipeline;
 		if (tokenize(line, &args, "\n\t \"") < 0)
 			goto shell;
 		if (!strcmp(args[0], "exit")) {
@@ -307,9 +317,8 @@ shell:
 			free(args);
 			goto shell;
 		}
-		if (strchr(line, '|') != NULL)
-			goto pipeline;
 		if (in_path(PATH, args[0]) < 0) {
+			free(line);
 			free(args);
 			goto shell;
 		}
@@ -319,6 +328,7 @@ shell:
 			pid = waitpid(pid, &status, 0);
 			sigreset();
 			free(args);
+			free(line);
 			goto shell;
 		} else if (pid == 0) {
 			execvp(args[0], args);
@@ -326,6 +336,8 @@ shell:
 			goto exit;
 		} else {
 			fprintf(stderr, "error: %s\n", strerror(errno));
+			free(line);
+			free(args);
 			goto exit;
 		}
 pipeline:
