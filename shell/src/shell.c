@@ -18,6 +18,23 @@
 struct pnode *PATH;
 
 /*
+ * @r_wait - Custom wait function that restarts when suspended by signal
+ *
+ * @stat_loc - Similar to status
+ *
+ * Source code from: UNIX SYSTEMS Programming, K. A. Robbins, S. Robbins
+ */
+pid_t r_wait(int *stat_loc)
+{
+   pid_t retval;
+
+   do {
+	retval = wait(stat_loc);
+   } while (retval == -1 && errno == EINTR);
+   return retval;
+}
+
+/*
  * @tokenize - Parse line into args separated by delimiter(s)
  *
  * @line - The line to be parsed
