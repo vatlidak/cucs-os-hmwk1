@@ -169,9 +169,8 @@ int pipeline(char *line)
 	}
 	if (pid > 0) {
 		for (i = 0; i < npipes; i++) {
-			if (close(pipes[i][READ]) < 0 ||
-			    close(pipes[i][WRITE]) < 0)
-				goto  error;
+			close(pipes[i][READ]);
+			close(pipes[i][WRITE]);
 		}
 		sigignore();
 		while (r_wait(NULL) > 0)
@@ -187,7 +186,7 @@ int pipeline(char *line)
 				goto error;
 			if (dup2(pipes[i][WRITE], 1) < 0)
 				goto error;
-			if (close(pipes[i][READ]) < 0)
+			if (close(pipes[i][WRITE]) < 0)
 				goto error;
 		}
 		if (i != 0) {
@@ -198,10 +197,9 @@ int pipeline(char *line)
 			if (close(pipes[i-1][READ]) < 0)
 				goto error;
 		}
-		for (j = 0; j < i; j++) {
-			if (close(pipes[j][READ]) < 0 ||
-			    close(pipes[j][WRITE]) < 0)
-				goto error;
+		for (j = 0; j < i - 1; j++) {
+			close(pipes[j][READ]);
+			close(pipes[j][WRITE]);
 		}
 		char *beg = strtok(line, "|\n");
 		/* find which partition of the pipeline you should execute */
