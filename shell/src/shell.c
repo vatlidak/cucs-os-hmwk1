@@ -94,19 +94,19 @@ int tokenize(char *line, char ***args, char *delim)
 	 */
 	if (line == NULL)
 		return NOT_OK;
-	copy = calloc(strlen(line), sizeof(char));
+	copy = calloc(strlen(line) + 1, sizeof(char));
 	if (copy == NULL) {
 		fprintf(stderr, "error: %s", strerror(errno));
 		return NOT_OK;
 	}
 	strcpy(copy, line);
-	strtok(copy, delim);
+	if (strtok(copy, delim) == NULL)
+		return NOT_OK;
 	ntok = 1;
 	while (strtok(NULL, delim) != NULL)
 		ntok++;
 	free(copy);
-
-	copy = calloc(strlen(line), sizeof(char));
+	copy = calloc(strlen(line) + 1, sizeof(char));
 	if (copy == NULL) {
 		fprintf(stderr, "error: %s", strerror(errno));
 		return NOT_OK;
