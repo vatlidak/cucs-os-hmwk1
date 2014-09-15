@@ -27,25 +27,26 @@ struct pnode *PATH;
  */
 pid_t r_wait(int *stat_loc)
 {
-   pid_t retval;
+	pid_t retval;
 
-   do {
-	retval = wait(stat_loc);
-   } while (retval == -1 && errno == EINTR);
-   return retval;
+	do {
+		retval = wait(stat_loc);
+	} while (retval == -1 && errno == EINTR);
+	return retval;
 }
 
 /*
  * @sigignore - Ignore ctrl-c
  */
-void sigignore()
+void sigignore(void)
 {
 	struct sigaction act;
+
 	act.sa_handler = SIG_IGN;
 	act.sa_flags = 0;
 	if ((sigemptyset(&act.sa_mask) == -1) ||
-	    (sigaction(SIGINT,&act,NULL) == -1)) {
-		fprintf(stderr,"error: %s\n", strerror(errno));
+	    (sigaction(SIGINT, &act, NULL) == -1)) {
+		fprintf(stderr, "error: %s\n", strerror(errno));
 		return;
 	}
 }
@@ -53,14 +54,15 @@ void sigignore()
 /*
  * @sigreset - Reset to default signal handler
  */
-void sigreset()
+void sigreset(void)
 {
 	struct sigaction act;
+
 	act.sa_handler = SIG_DFL;
 	act.sa_flags = 0;
 	if ((sigemptyset(&act.sa_mask) == -1) ||
-	    (sigaction(SIGINT,&act,NULL) == -1)) {
-		fprintf(stderr,"error: %s\n", strerror(errno));
+	    (sigaction(SIGINT, &act, NULL) == -1)) {
+		fprintf(stderr, "error: %s\n", strerror(errno));
 		return;
 	}
 }
@@ -135,7 +137,7 @@ int pipeline(char *line)
 	char **args;
 
 	npipes = 0;
-	for(i = 0; i < strlen(line); i++)
+	for (i = 0; i < strlen(line); i++)
 		if (line[i] == '|')
 			++npipes;
 	pipes = calloc(npipes, sizeof(int *));
@@ -154,41 +156,36 @@ int pipeline(char *line)
 			goto error;
 		}
 	}
-#define READ 0
-#define WRITE 1
 	for (i = 0; i < npipes + 1; i++) {
 		pid = fork();
 		if (pid == 0)
 			break;
-		else if (pid > 0) {
+		else if (pid > 0)
 			continue;
-		}
 		else
 			goto error;
 	}
 	if (pid > 0) {
-		for(i = 0; i < npipes; i++) {
+		for (i = 0; i < npipes; i++) {
 			close(pipes[i][READ]);
 			close(pipes[i][WRITE]);
 		}
-		pid_t rval;
-		while ((rval = r_wait(NULL)) > 0);
-		//{
-		//	fprintf(stderr, "%ld\n", (long) rval);
-		//}
+		sigignore();
+		while (r_wait(NULL) > 0)
+			;
+		sigreset();
 		for (i = 0; i < npipes; i++)
 			free(pipes[i]);
 		free(pipes);
 	}
 	if (pid == 0) {
-		//fprintf(stderr, "chico: %ld\n", (long)getpid());
 		if (i != npipes) {
 			if (close(pipes[i][READ]) < 0)
 				goto error;
 			if (dup2(pipes[i][WRITE], 1) < 0)
 				goto error;
 		}
-		if(i != 0) {
+		if (i != 0) {
 			if (close(pipes[i-1][WRITE]) < 0)
 				goto error;
 			if (dup2(pipes[i-1][READ], 0) < 0)
@@ -206,7 +203,6 @@ int pipeline(char *line)
 			fprintf(stderr, "error: cannot parse cmd: <%s>\n", beg);
 			goto exit;
 		}
-
 		if (in_path(PATH, args[0]) < 0) {
 			free(args);
 			goto error;
@@ -319,15 +315,15 @@ shell:
 		}
 		pid = fork();
 		if (pid > 0) {
-			/*TODO: errno EINTR*/
+			sigignore();
 			pid = waitpid(pid, &status, 0);
+			sigreset();
 			free(args);
 			goto shell;
 		} else if (pid == 0) {
-			/* grep -"""*/
 			execvp(args[0], args);
 			fprintf(stderr, "error: %s\n", strerror(errno));
-			goto shell;
+			goto exit;
 		} else {
 			fprintf(stderr, "error: %s\n", strerror(errno));
 			goto exit;
