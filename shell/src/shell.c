@@ -13,6 +13,7 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <ctype.h>
+#include <signal.h>
 #include "path_utils.h"
 
 struct pnode *PATH;
@@ -32,6 +33,36 @@ pid_t r_wait(int *stat_loc)
 	retval = wait(stat_loc);
    } while (retval == -1 && errno == EINTR);
    return retval;
+}
+
+/*
+ * @sigignore - Ignore ctrl-c
+ */
+void sigignore()
+{
+	struct sigaction act;
+	act.sa_handler = SIG_IGN;
+	act.sa_flags = 0;
+	if ((sigemptyset(&act.sa_mask) == -1) ||
+	    (sigaction(SIGINT,&act,NULL) == -1)) {
+		fprintf(stderr,"error: %s\n", strerror(errno));
+		return;
+	}
+}
+
+/*
+ * @sigreset - Reset to default signal handler
+ */
+void sigreset()
+{
+	struct sigaction act;
+	act.sa_handler = SIG_DFL;
+	act.sa_flags = 0;
+	if ((sigemptyset(&act.sa_mask) == -1) ||
+	    (sigaction(SIGINT,&act,NULL) == -1)) {
+		fprintf(stderr,"error: %s\n", strerror(errno));
+		return;
+	}
 }
 
 /*
@@ -94,6 +125,8 @@ int tokenize(char *line, char ***args, char *delim)
  *
  * @line - The line with the piped command(s)
  */
+#define READ 0
+#define WRITE 1
 int pipeline(char *line)
 {
 	pid_t pid;
