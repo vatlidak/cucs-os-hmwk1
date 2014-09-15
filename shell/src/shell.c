@@ -105,7 +105,7 @@ int pipeline(char *line)
 	for(i = 0; i < strlen(line); i++)
 		if (line[i] == '|')
 			++npipes;
-	pipes = calloc(npipes, sizeof(int));
+	pipes = calloc(npipes, sizeof(int *));
 	if (pipes == NULL) {
 		fprintf(stderr, "error: %s\n", strerror(errno));
 		goto error;
