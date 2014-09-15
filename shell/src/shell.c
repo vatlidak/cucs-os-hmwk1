@@ -189,7 +189,7 @@ exit:
 }
 
 /*
- * @cd - Implement built-in "cd"
+ * @cd - Built-in "cd"
  *
  * @args - argv[0] is the command's name; arguments follow subsequently.
  */
@@ -219,7 +219,7 @@ void cd(char **args)
 }
 
 /*
- * @path - Implement built-in "path"
+ * @path - Built-in "path"
  *
  * @args - argv[0] is the command's name; arguments follow subsequently.
  */
@@ -240,48 +240,68 @@ void path(char **args)
 
 int main(int argc, char **argv)
 {
-	int len = 0;
+	int len;
 	char *line;
 	char **args;
 	size_t n = 12345;
+	pid_t pid;
+	int status;
 
 	PATH = NULL;
 	while (1) {
+shell:
 		printf("$");
 		line = NULL;
 		len = getline(&line, &n, stdin);
-		if (len < 0)
+		if (len < 0) {
 			fprintf(stderr, "error: %s", strerror(errno));
+			goto exit;
+		}
 		if (len == 1)
-			continue;
-		if (tokenize(line, &args, "\n\t ") < 0)
-			continue;//goto error;
+			goto shell;
+		if (tokenize(line, &args, "\n\t \"") < 0)
+			goto shell;
 		if (!strcmp(args[0], "exit")) {
 			free(line);
 			free(args);
-			break;
+			goto exit;
 		}
 		if (!strcmp(args[0], "cd")) {
 			cd(args);
 			free(line);
 			free(args);
-			continue;
+			goto shell;
 		}
 		if (!strcmp(args[0], "path")) {
 			path(args);
 			free(line);
 			free(args);
-			continue;
+			goto shell;
 		}
-		/*if we get here it is not a build in cmd */
-		/* bin is not an absolute path; check PATH variable */
+		if (strchr(line, '|') != NULL)
+			goto pipeline;
 		if (in_path(PATH, args[0]) < 0) {
 			free(args);
-			continue;
+			goto shell;
 		}
-		free(args);
-		execute(line);
-		free(line);
+		pid = fork();
+		if (pid > 0) {
+			/*TODO: errno EINTR*/
+			pid = waitpid(pid, &status, 0);
+			free(args);
+			goto shell;
+		} else if (pid == 0) {
+			/* grep -"""*/
+			execvp(args[0], args);
+			fprintf(stderr, "error: %s\n", strerror(errno));
+			goto shell;
+		} else {
+			fprintf(stderr, "error: %s\n", strerror(errno));
+			goto exit;
+		}
+pipeline:
+		pipeline(line);
 	}
+exit:
 	return 0;
 }
