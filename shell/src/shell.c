@@ -18,26 +18,27 @@
 struct pnode *PATH;
 
 /*
- * @tokenize - Parse line into tokens
+ * @tokenize - Parse line into args separated by delimiter(s)
  *
  * @line - The line to be parsed
- * @tokens - The tokens retrieved line
+ * @args - The args retrieved by the line
+ * @delim - A set of delimiters
  *
- * An array, whose starting address is pointed by "*tokens",
- * is allocated to store any tokens found in line. This array
+ * An array, whose starting address is pointed by "*args",
+ * is allocated to store any args found in line. This array
  * should by freed by the calling method.
  */
-int tokenize(char *line, char ***tokens)
+int tokenize(char *line, char ***args, char *delim)
 {
 	int i;
 	int ntok;
-	const char *delim = "\n\t ";
 	char *copy;
 
 	/*
 	 * strtok libc function modifies the initial buffer it is
 	 * requested to tokenize. Thus, we make a copy of the
-	 * initial buffer and use it to count number of tokens.
+	 * initial buffer and use it to count number of args
+	 * and in the next iteration then retrieve the args.
 	 */
 	copy = calloc(strlen(line), sizeof(char));
 	if (copy == NULL) {
@@ -50,28 +51,51 @@ int tokenize(char *line, char ***tokens)
 	while (strtok(NULL, delim) != NULL)
 		ntok++;
 	free(copy);
-	*tokens = calloc(ntok + 1, sizeof(char *));
-	if (*tokens == NULL) {
+
+	copy = calloc(strlen(line), sizeof(char));
+	if (copy == NULL) {
 		fprintf(stderr, "error: %s", strerror(errno));
 		return NOT_OK;
 	}
-	**tokens = strtok(line, delim);
+	strcpy(copy, line);
+	*args = calloc(ntok + 1, sizeof(char *));
+	if (*args == NULL) {
+		fprintf(stderr, "error: %s", strerror(errno));
+		return NOT_OK;
+	}
+	**args = strtok(copy, delim);
 	for (i = 1; i < ntok; i++)
-		*(*tokens + i) = strtok(NULL, delim);
-	*(*tokens + i) = NULL;
+		*(*args + i) = strtok(NULL, delim);
+	*(*args + i) = NULL;
 	/* printf("ntok:%d\n", ntok); */
 	return OK;
 }
 
 /*
- * @execute - Execute a command
+ * @execute - Execute command(s) as specified in line
  *
- * @args - argv[0] is the command's name; arguments follow subsequently.
+ * @line - A pointer to a string specifying command(s) to be executed
  */
-int execute(char **args)
+int execute(char *line)
 {
-	execvp(args[0], args);
+	char **args;// = NULL;
+	pid_t pid;
+	int status;
+
+	pid = fork();
+	if (pid > 0) {
+		pid = waitpid(pid, &status, 0);
+		return OK;
+	} else if (pid == 0) {
+		if (tokenize(line, &args, "\n\t \"") < 0)
+			goto error;
+		execvp(args[0], args);
+	} else {
+		goto error;
+	}
+error:
 	fprintf(stderr, "error: %s", strerror(errno));
+	fprintf(stderr, "execute\n");
 	return NOT_OK;
 }
 
@@ -127,11 +151,9 @@ void path(char **args)
 
 int main(int argc, char **argv)
 {
-	int status;
 	int len = 0;
-	pid_t	pid;
 	char *line;
-	char **tokens;
+	char **args;
 	size_t n = 12345;
 
 	PATH = NULL;
@@ -139,51 +161,38 @@ int main(int argc, char **argv)
 		printf("$");
 		line = NULL;
 		len = getline(&line, &n, stdin);
-		if (len < 0) {
+		if (len < 0)
 			fprintf(stderr, "error: %s", strerror(errno));
-			goto error;
-		}
 		if (len == 1)
 			continue;
-		if (tokenize(line, &tokens) < 0)
-			goto error;
-		if (!strcmp(tokens[0], "exit")) {
+		if (tokenize(line, &args, "\n\t ") < 0)
+			continue;//goto error;
+		if (!strcmp(args[0], "exit")) {
 			free(line);
-			free(tokens);
+			free(args);
 			break;
 		}
-		if (!strcmp(tokens[0], "cd")) {
-			cd(tokens);
+		if (!strcmp(args[0], "cd")) {
+			cd(args);
 			free(line);
-			free(tokens);
+			free(args);
 			continue;
 		}
-		if (!strcmp(tokens[0], "path")) {
-			path(tokens);
+		if (!strcmp(args[0], "path")) {
+			path(args);
 			free(line);
-			free(tokens);
+			free(args);
 			continue;
 		}
+		/*if we get here it is not a build in cmd */
 		/* bin is not an absolute path; check PATH variable */
-		if (isalpha(tokens[0][0]))
-			if (in_path(PATH, tokens[0]) < 0) {
-				fprintf(stderr, "error: executabe not in PATH\n");
-				continue;
-			}
-		pid = fork();
-		if (pid > 0) {
-			/* TO DO error  here */
-			pid = waitpid(pid, &status, 0);
-			free(line);
-			free(tokens);
-		} else if (pid == 0) {
-			if (execute(tokens) < 0)
-				goto error;
-		} else
-			goto error;
+		if (in_path(PATH, args[0]) < 0) {
+			free(args);
+			continue;
+		}
+		free(args);
+		execute(line);
+		free(line);
 	}
 	return 0;
-error:
-	printf("\n");
-	return -1;
 }

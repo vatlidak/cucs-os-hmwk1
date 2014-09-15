@@ -60,7 +60,7 @@ int delete(struct pnode **list, char *dir)
 		}
 		list = &((*list)->next);
 	}
-	fprintf(stderr, "error: Cannot remove dir %s from PATH\n", dir );
+	fprintf(stderr, "error: Cannot remove dir %s from PATH\n", dir);
 	return NOT_OK;
 }
 
