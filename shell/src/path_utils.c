@@ -60,6 +60,7 @@ int delete(struct pnode **list, char *dir)
 		}
 		list = &((*list)->next);
 	}
+	fprintf(stderr, "error: Cannot remove dir %s from PATH\n", dir );
 	return NOT_OK;
 }
 
@@ -74,6 +75,9 @@ int in_path(struct pnode *list, char *bin)
 	struct stat sbuf;
 	char *fullpath;
 
+	/* If "bin" is an absolute path, PATH variable doesn't matter */
+	if (bin[0] == '/')
+		return OK;
 	while (list != NULL) {
 		fullpath = calloc(strlen(list->dir) + strlen(bin) + 2,
 				  sizeof(char));
@@ -89,6 +93,7 @@ int in_path(struct pnode *list, char *bin)
 		free(fullpath);
 		list = list->next;
 	}
+	fprintf(stderr, "error: executable %s not in PATH\n", bin);
 	return NOT_OK;
 }
 
