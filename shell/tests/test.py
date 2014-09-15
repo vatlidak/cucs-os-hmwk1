@@ -190,6 +190,8 @@ def run_tests():
     tester.add_test("|", "error:*");
     tester.add_test("/bin/ls|", "error:*");
     tester.add_test("/bin/ls||/usr/bin/wc", "error:*");
+    tester.add_test("/bin/echo \"la\" | /bin/grep \"l\" | /usr/bin/wc",  "      1       1       3", True)
+
     tester.run()
     tester.print_results()
 
