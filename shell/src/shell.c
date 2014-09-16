@@ -277,6 +277,10 @@ int main(int argc, char **argv)
 	while (1) {
 shell:
 		printf("$");
+		/*
+		 * line is set to NULL so that getline allocates the buffer;
+		 * "n" is ignored
+		 */
 		line = NULL;
 		len = getline(&line, &n, stdin);
 		if (len < 0) {
